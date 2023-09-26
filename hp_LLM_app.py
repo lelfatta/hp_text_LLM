@@ -5,8 +5,16 @@ import streamlit as st
 import random
 import time
 import openai
-import pandas as pd
-import pandasql as psql
+from pypdf import PdfReader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.document_loaders import TextLoader
+from langchain.retrievers import ParentDocumentRetriever
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.storage import InMemoryStore
+
+
 
 #set wide as default
 st.set_page_config(layout="wide")
@@ -15,143 +23,19 @@ st.set_page_config(layout="wide")
 api_key = st.secrets["openai_api_key"]
 openai.api_key = api_key
 
-# Cache data transformation to improve performance
-@st.cache_data
-def company_rev_rename(companies_df):
-    # Rename the 'Revenue (USD millions)' column to 'Revenue'
-    companies_df.rename(columns={'Revenue (USD millions)': 'Revenue'}, inplace=True)
-    return
-#company_rev_rename(companies_df)
-
-# Cache data to improve performance using Streamlit's caching mechanism
-@st.cache_data
-def load_data(path):
-    # Read the CSV file at the given 'path' into a Pandas DataFrame
-    df = pd.read_csv(path)
-     # Check if the path contains "webscrape.csv"
-    if "webscrape.csv" in path:
-        company_rev_rename(df)  # Rename column if the condition is met
-        
-    return df
-
-# Load movies, companies, and music data using the load_data function
-# Cached data will be used after the first load
-movies_df = load_data("llm_data/movies.csv")  
-companies_df = load_data('llm_data/webscrape.csv')  
-music_df = load_data('llm_data/musicdata.csv')  
+#Extract text from pdf using pdfreader
+def extract_text_from_pdf(pdf_path):
+    pdf_reader = PdfReader(open(pdf_path, "rb"))
+    text = ""
+    #page_num= len(pdf_reader.pages)
+    for page_num in range(len(pdf_reader.pages)):
+        page = pdf_reader.pages[page_num]
+        text += page.extract_text()
+    return text
 
 
-@st.cache_data
-def generate_dataframe_metadata(dataframe_dict):
-    """
-    Generate metadata string for dataframes in the dictionary.
-    
-    Parameters:
-        dataframe_dict (dict): Dictionary of dataframe names and dataframes.
-        
-    Returns:
-        str: Metadata string.
-    """
-    df_metadata = "Metadata:\n" 
-    
-    # Loop through each dataframe in the dictionary
-    for df_name, df in dataframe_dict.items():
-        # Add dataframe name
-        df_metadata += f"Dataframe: {df_name}\n"
-        
-        # Add column names and types
-        df_metadata += "Column Names and Types:\n"
-        for col, dtype in zip(df.columns, df.dtypes):
-            df_metadata += f"  - {col}: {dtype}\n"
-        
-        # Add sample row format
-        #sample_row = df.iloc[0]
-        #df_metadata += "Sample Row Format (assume the data values are fake):\n"
-        #for col, value in sample_row.items():
-         #   df_metadata += f"  - {col}: {type(value).__name__} ({value})\n"
-        
-        # Add a newline for readability
-        df_metadata += "\n"
-    
-    return df_metadata  # Return the metadata string
 
-# Create a dictionary of dataframes
-df_dict = {'companies_df': companies_df, 'movies_df': movies_df, 'music_df': music_df}
-
-# Generate and store metadata
-metadata = generate_dataframe_metadata(df_dict)
-
-#takes user input and queries chosen llm to generate sql query
-def generate_sql_query(context, prompt):
-    response = openai.ChatCompletion.create(
-       model="gpt-3.5-turbo",
-       messages= [{"role": "system", "content":"generate ONLY Sql to query relevant data for the User Query. If multiple queries are needed to get all the data, include a --multiple at the very end"},
-          {"role": "user", "content": f"{prompt}, \n {context}"}          
-       ],
-       temperature= .1 
-       
-    )
-    
-    return response
-
-
-context_for_sql = f"{metadata}\nUse like and wildcards on where clauses. The sql's tables will be dataframe names. Use metadata for data context and formatting, show all columns"
-
-#Extracts the table name from the returned SQL query string. Case-insensitive.
-def extract_table_from_sql(sql_query):
-    # Convert to uppercase to make it case-insensitive
-    sql_query_up = sql_query.upper()
-
-    # Find the starting index of 'FROM ' substring
-    from_index = sql_query_up.index('FROM ') + 5
-
-    # Extract the string after 'FROM '
-    tail_str = sql_query_up[from_index:]
-
-    # Find the first space, or the linebreak to extract the table name
-    space_index = tail_str.find(' ')
-    linebreak_index = tail_str.find('\n') 
-    # Initialize final_index
-    final_index = -1
-
-    # Check if either index is -1 (substring not found)
-    if space_index == -1 and linebreak_index == -1:
-        final_index = len(tail_str)
-    elif space_index == -1:
-        final_index = linebreak_index
-    elif linebreak_index == -1:
-        final_index = space_index
-    else:
-        final_index = min(space_index, linebreak_index)
-
-    # Extract and return table name
-    return tail_str[:final_index].strip()
-
-#Executes a SQL query on a Pandas DataFrame specified in a dictionary, returning the result as another DataFrame. Also case-insensitive.
-def execute_sql_query(sql_query, df_dict):
- #   if sql_query.endswith("--multiple"):
-  #       return "Need to split question into multiple queries to get your data. Please break your question into multiple questions"
-    # Extract the table name from the SQL query
-    table_in_query = extract_table_from_sql(sql_query).lower()  # Convert to lowercase
-
-    # Convert df_dict keys to lowercase for case-insensitive comparison
-    lower_df_dict = {k.lower(): v for k, v in df_dict.items()}
-
-    # Check if the table name exists in the df_dict
-    if table_in_query in lower_df_dict:
-        # Get the actual dataframe from the dictionary
-        target_df = lower_df_dict[table_in_query]
-
-        # Execute the query on the target dataframe
-        result_df = psql.sqldf(sql_query)
-        return result_df
-    else:
-        return f"Table {table_in_query} not found."
-
-#convert the dataframe output into markdown for LLM ingestion
-#def df_to_markdown(df):
-#    return df.to_markdown()
-
+################################## Still need to add actual response function
 #generate the final answer to the user's query 
 def generate_final_answer(context, prompt):
     response = openai.ChatCompletion.create(
@@ -164,9 +48,6 @@ def generate_final_answer(context, prompt):
     #print(response)
     return response
 #########################################################################################################################
-sample_movie = movies_df.sample(1)
-sample_company = companies_df.sample(1)
-sample_music = music_df.sample(1)
 
 # Initialize Streamlit app
 def main():
@@ -174,7 +55,7 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
         
-    st.title('Multi-Dataset Tabular Data Chat App')
+    st.title('Q&A With Your Printer's User's Manual')
     
     #show_sidebar = st.sidebar.checkbox("Show Sidebar", value=True)  # Default set to visible
     #if show_sidebar:
@@ -185,19 +66,17 @@ def main():
     """)
     #st.sidebar.write("---")  # Horizontal line for clean transition
     st.sidebar.markdown("""
-    This app allows you to ask questions about three different datasets spanning three different topics: Movies, Corporations, and Music.
-    The app currently uses OpenAI's API to take in your questions, generate a SQL query to get relevant data for, and then use that data to answer your question.
-    As of 9/12/23, this app is a barebones proof of concept project. The chatbot does not have any short term memory and will not work well on certain questions. 
-    For example, any question that would need multiple queries to answer.
+    This app allows you to fulfill every pre-Y2K office professional's dream: figure out why the printer isn't working! 
+    The proof of concept is made specifically to get experience with Langchain's Parent Document Retriever (PDR). The PDR helps maximize the pros and minimize the cons 
+    of some of the properties that occur with different size chunking and embedding text data. The idea is that large chunks lose accuracy but maintain context, while small chunks 
+    are essentially memorized and lose context, which can hinder creativity in interpretation and a bots's output. I like to make the analogy that small chunks are rote memorization of 
+    concepts for a test, while large chunks lose the detail that rote memorization provides they allow a high level overview that is used in life outside of tests. 
+    As of 9/27/23, this app is a proof of concept project. The chatbot does not have any short term memory and will not work well on certain questions. The text from the pdf has been minimally 
+    processed for the sake of time and the LLM has been instructed to summarize the text as the text data is a bit messy. If the output you receive is not relevant or very strange, please reach out to me 
+    on LinkedIn and I will look into it. 
     """)
 
-    st.sidebar.markdown("Here are the Kaggle datasets I am using for this project:")
-    st.sidebar.markdown("""
-        - [**Movies**](https://www.kaggle.com/datasets/danielgrijalvas/movies)
-        - [**Corporations**](https://www.kaggle.com/datasets/claymaker/us-largest-companies)
-        - [**Music Sales**](https://www.kaggle.com/datasets/andrewmvd/music-sales)
-        """)
-    st.sidebar.write("---")  # Horizontal line for clean transition
+  st.sidebar.write("---")  # Horizontal line for clean transition
 
     # Top 1/3 for images
     st.write("###")
