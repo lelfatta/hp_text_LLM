@@ -85,9 +85,6 @@ def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str
 loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
 
 
-
-
-################################## 
 def generate_response(context, prompt):
   response= openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
@@ -132,27 +129,14 @@ def main():
 
     # Top 1/3 for images
     st.write("###")
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        st.image("Romantisized golden era movie theater screen from a side angle lights dimmed.jfif", caption="Movies by Dalle2", use_column_width=True)
+        st.write("Lorem Ipsum")
         
     with col2:
-        st.image("Corporate buildings in Manhattan from below looking up_.jfif", caption="Corporations by Dalle2", use_column_width=True)
+        st.image("parent_doc_retriever.png", caption="Parent_Document_Retrievers by Dalle2", use_column_width=True)
         
-    with col3:
-        st.image("wide eyed lens shot vinyl record player in focus in the foreground background is a coffee shop but blurred with intense bokeh (1).jfif", caption="Music Sales by Dalle2", use_column_width=True)
-                
-    with st.expander("See movie sample data"):
-        st.write("Use this to help write questions!")
-        st.table(sample_movie)
-
-    with st.expander("See company sample data"):
-        st.write("Use this to help write questions!")
-        st.table(sample_company)
-
-    with st.expander("See music sample data"):
-        st.write("Use this to help write questions!")
-        st.table(sample_music)
+   
              
          
     # Show 'Clear Chat History' button only if chat history is not empty
@@ -172,6 +156,7 @@ def main():
             st.markdown(message["content"])
 
     if user_input := st.chat_input('Type your question here:'):
+        
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
         #Display user message in chat message container
@@ -181,28 +166,20 @@ def main():
                 # Initialize final_answer to store either the generated answer or an error message
         final_answer = ""
         
-        # First try-except block for executing the SQL query
-        try:
-            # Generate SQL query
-            sql_query = generate_sql_query(context_for_sql, user_input)
-            print(sql_query)
-            table_in_query = extract_table_from_sql(sql_query.choices[0].message.content)
-            
-            # Execute the generated SQL query
-            sql_result = execute_sql_query(sql_query.choices[0].message.content, df_dict)
-            print(sql_result)
-            
-        except Exception as e:
-            final_answer = f"An error occurred while executing the SQL query. Try rewriting your question to be more specific: {e}"
+        #
+        embed_input= embeddings_model.embed_query(user_input)
+        query_sim_search_context = loaded_retriever.vectorstore.similarity_search_by_vector_with_relevance_scores(embed_input)
+        content=""
+        for info in range(0,len(query_sim_search_context)):
+          content += query_sim_search_context[info][0].page_content
+          #print(len(query_sim_search_context[info][0].page_content))
         
-        # Second try-except block for generating the final answer
+        # first try-except block for generating the final answer
         if not final_answer:  # Only proceed if no error occurred in the first try-except block
             try:
                 # Create final context for prompt (prompt engineering) and generate final answer
-                final_context = f"Data: {sql_result}\nBased on this specific data and context, answer the user query."
-                final_chat_object = generate_final_answer(sql_result, user_input)
-                final_answer = final_chat_object.choices[0].message.content
-            
+                llm_response= generate_response(content, user_input)
+                final_answer=  llm_response.choices[0].message.content           
             except Exception as e:
                 final_answer = f"An error occurred while generating the final answer: {e}"
      
