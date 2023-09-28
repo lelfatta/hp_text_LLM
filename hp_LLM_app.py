@@ -4,7 +4,7 @@
 import streamlit as st
 import random
 import time
-import openai
+
 from pypdf import PdfReader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
