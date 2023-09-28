@@ -131,7 +131,7 @@ def main():
 
     # Top 1/3 for images
     st.write("###")
-    st.image("First_Page_Manual.png", caption= "The User's Guide you are questioning!", use_column_width=True)
+    st.image("First_Page_Manual.png", caption= "The User's Guide you are questioning!")
     st.markdown("This is the cover of [this User's Guide](https://github.com/lelfatta/hp_text_LLM/blob/main/Manual.pdf). Please use it to come up with your questions for the chatbot!")
      
          
