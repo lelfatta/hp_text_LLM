@@ -23,7 +23,7 @@ st.set_page_config(layout="wide")
 # Access API key from Streamlit secrets and set key 
 api_key = st.secrets["openai_api_key"]
 openai.api_key = api_key
-embeddings_model = OpenAIEmbeddings(openai_api_key=api_key)
+
 
 
 
@@ -99,8 +99,8 @@ def generate_response(context, prompt):
 
 # Initialize Streamlit app
 def main():
-   
-    loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
+    embeddings_model = OpenAIEmbeddings(openai_api_key=api_key)
+    loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function=embeddings_model)
 
     # Initialize chat history if it doesn't exist
     if 'chat_history' not in st.session_state:
