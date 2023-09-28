@@ -131,15 +131,11 @@ def main():
 
     # Top 1/3 for images
     st.write("###")
-    col1, col2 = st.columns(2)
+    col1 = st.columns(1)
     with col1:
         st.image("First_Page_Manual.png", caption= "The User's Guide you are questioning!", use_column_width=True)
-        st.write("Lorem Ipsum")
-        
-    with col2:
-        st.image("parent_doc_retriever.png", caption="Parent_Document_Retrievers by Dalle2", use_column_width=True)
-        
-   
+        st.markdown("This is the cover of [this User's Guide](https://github.com/lelfatta/hp_text_LLM/blob/main/Manual.pdf). Please use it to come up with your questions for the chatbot!")
+      
              
          
     # Show 'Clear Chat History' button only if chat history is not empty
