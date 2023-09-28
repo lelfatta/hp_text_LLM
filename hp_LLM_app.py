@@ -44,7 +44,7 @@ import shutil
 file_name= 'in_memory_store.pkl'
 
 @st.cache_data
-def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, embedding_function= embeddings_model):
+def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, embedding_function: Any) -> Any:
     """
     Load a retriever from a zipped vector store and a pickled doc store.
 
