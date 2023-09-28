@@ -43,7 +43,7 @@ import pickle
 import shutil
 file_name= 'in_memory_store.pkl'
 
-
+@st.cache_resource
 def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, _embedding_function: Any) -> Any:
     """
     Load a retriever from a zipped vector store and a pickled doc store.
@@ -99,7 +99,7 @@ def generate_response(context, prompt):
 
 # Initialize Streamlit app
 def main():
-    @st.cache_resource
+    
     loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', _embedding_function= embeddings_model)
 
     # Initialize chat history if it doesn't exist
