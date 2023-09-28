@@ -8,7 +8,7 @@ openai
 
 #for LLM application
 chromadb
-lanchain
+langchain
 tiktoken
 pypdf
 
