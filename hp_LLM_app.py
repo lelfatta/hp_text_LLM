@@ -1,10 +1,9 @@
 
 # streamlit_layout_app.py
-
+import openai
 import streamlit as st
 import random
 import time
-
 from pypdf import PdfReader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
