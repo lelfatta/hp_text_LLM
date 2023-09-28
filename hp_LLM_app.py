@@ -103,7 +103,7 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
         
-    st.title('Q&A With Your Printer's User's Manual')
+    st.title("Q&A With Your Printer's User's Manual")
     
     #show_sidebar = st.sidebar.checkbox("Show Sidebar", value=True)  # Default set to visible
     #if show_sidebar:
