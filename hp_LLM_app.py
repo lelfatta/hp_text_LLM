@@ -124,7 +124,7 @@ def main():
     on LinkedIn and I will look into it. 
     """)
 
-  st.sidebar.write("---")  # Horizontal line for clean transition
+    st.sidebar.write("---")  # Horizontal line for clean transition
 
     # Top 1/3 for images
     st.write("###")
