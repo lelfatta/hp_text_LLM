@@ -4,7 +4,7 @@
 import streamlit as st
 import random
 import time
-from pypdf import PdfReader
+
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
@@ -12,6 +12,9 @@ from langchain.document_loaders import TextLoader
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.storage import InMemoryStore
+
+from pypdf import PdfReader
+
 import pickle 
 import openai
 
