@@ -1,6 +1,6 @@
 
 # streamlit_layout_app.py
-import openai
+#import openai
 import streamlit as st
 import random
 import time
