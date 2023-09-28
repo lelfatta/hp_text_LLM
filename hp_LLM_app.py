@@ -70,7 +70,7 @@ def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str
     store2.mset(list(unpickled_dict.items()))
     
     # Initialize a Chroma vector store with the unzipped directory
-    uz_vec_db = Chroma(collection_name="split_parents", persist_directory=unzip_dir, embedding_function=embedding_function)
+    uz_vec_db = Chroma(collection_name="split_parents", persist_directory=unzip_dir, embedding_function=_embedding_function)
     
     # Create and return the retriever
     loaded_retriever = ParentDocumentRetriever(
@@ -100,7 +100,7 @@ def generate_response(context, prompt):
 # Initialize Streamlit app
 def main():
     embeddings_model = OpenAIEmbeddings(openai_api_key=api_key)
-    loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embeddings_model)
+    loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', _embedding_function: embeddings_model)
 
     # Initialize chat history if it doesn't exist
     if 'chat_history' not in st.session_state:
