@@ -4,6 +4,7 @@
 import streamlit as st
 import random
 import time
+import langchain
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
