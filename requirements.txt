@@ -1,9 +1,6 @@
 # Requirements for the GitHub repo
-# Web App Framework
 streamlit
-# For OpenAI GPT models
 openai
-#for LLM application
 pypdf
 chromadb
 langchain
