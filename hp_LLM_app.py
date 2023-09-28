@@ -15,6 +15,7 @@ from langchain.storage import InMemoryStore
 from pypdf import PdfReader
 import pickle 
 import openai
+from typing import Any, Tuple, Sequence
 
 #set wide as default
 st.set_page_config(layout="wide")
@@ -43,7 +44,7 @@ import shutil
 file_name= 'in_memory_store.pkl'
 
 @st.cache_data
-def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, embedding_function: embeddings_model):
+def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, embedding_function= embeddings_model):
     """
     Load a retriever from a zipped vector store and a pickled doc store.
 
@@ -82,7 +83,7 @@ def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str
     return loaded_retriever
 
 
-loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', _embedding_function= embeddings_model)
+loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
 
 
 def generate_response(context, prompt):
