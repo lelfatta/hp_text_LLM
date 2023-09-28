@@ -82,8 +82,6 @@ def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str
     
     return loaded_retriever
 
-@st.cache_resource
-loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
 
 
 def generate_response(context, prompt):
@@ -101,6 +99,9 @@ def generate_response(context, prompt):
 
 # Initialize Streamlit app
 def main():
+    @st.cache_resource
+    loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
+
     # Initialize chat history if it doesn't exist
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
