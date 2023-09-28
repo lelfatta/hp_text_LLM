@@ -3,7 +3,7 @@ streamlit
 openai
 pypdf
 chromadb
-langchain
+langchain==0.0.303
 tiktoken
 
 
