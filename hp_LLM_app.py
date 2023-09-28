@@ -13,7 +13,7 @@ from langchain.document_loaders import TextLoader
 from langchain.retrievers import ParentDocumentRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.storage import InMemoryStore
-
+import pickle 
 
 
 #set wide as default
@@ -22,8 +22,13 @@ st.set_page_config(layout="wide")
 # Access API key from Streamlit secrets and set key 
 api_key = st.secrets["openai_api_key"]
 openai.api_key = api_key
+embeddings_model = OpenAIEmbeddings(openai_api_key=api_key)
 
-#Extract text from pdf using pdfreader
+
+
+
+
+#Extract text from pdf using pdfreader   (This has already been run and will not be needed for actual implementation of the bot)
 def extract_text_from_pdf(pdf_path):
     pdf_reader = PdfReader(open(pdf_path, "rb"))
     text = ""
@@ -33,20 +38,67 @@ def extract_text_from_pdf(pdf_path):
         text += page.extract_text()
     return text
 
+import pickle 
+import shutil
+file_name= 'in_memory_store.pkl'
 
+@st.cache_data
+def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str, embedding_function: Any) -> Any:
+    """
+    Load a retriever from a zipped vector store and a pickled doc store.
 
-################################## Still need to add actual response function
-#generate the final answer to the user's query 
-def generate_final_answer(context, prompt):
-    response = openai.ChatCompletion.create(
-       model="gpt-3.5-turbo",
-       messages= [{"role": "system", "content":"Use this data to answer the query concisely, but be pleasant. Integrate the query in the answer" },
-          {"role": "user", "content": f"{prompt}, \n {context}"}          
-       ]
-       
+    Parameters:
+        zip_path (str): The path to the zip file containing the persisted vector store.
+        unzip_dir (str): The directory where the zip file should be unpacked.
+        pkl_path (str): The path to the pickle file containing the doc store dictionary.
+        embedding_function (Any): The embedding function to use.
+
+    Returns:
+        loaded_retriever (Any): The loaded retriever instance.
+    """
+    
+    # Unzip the vector store directory
+    shutil.unpack_archive(zip_path, unzip_dir)
+    
+    # Load the pickled doc store dictionary
+    with open(pkl_path, 'rb') as f:
+        unpickled_dict = pickle.load(f)
+    
+    # Initialize an InMemoryStore and populate it with the unpickled dictionary
+    store2 = InMemoryStore()
+    store2.mset(list(unpickled_dict.items()))
+    
+    # Initialize a Chroma vector store with the unzipped directory
+    uz_vec_db = Chroma(collection_name="split_parents", persist_directory=unzip_dir, embedding_function=embedding_function)
+    
+    # Create and return the retriever
+    loaded_retriever = ParentDocumentRetriever(
+        parent_splitter=RecursiveCharacterTextSplitter(chunk_size=2000),
+        child_splitter=RecursiveCharacterTextSplitter(chunk_size=500),
+        vectorstore=uz_vec_db,
+        docstore=store2
     )
-    #print(response)
-    return response
+    
+    return loaded_retriever
+
+@st.cache_data
+loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
+
+
+
+
+################################## 
+def generate_response(context, prompt):
+  response= openai.ChatCompletion.create(
+      model="gpt-3.5-turbo",
+      messages= [
+          {"role": "system", "content":"using the context provided, provide a summarized version of the context that is semantically correct that answers the user query."},
+          {"role": "user", "content": f"User query: {prompt}, \n Context: {context}"}
+          ], temperature= 1
+
+  )
+
+  return response
 #########################################################################################################################
 
 # Initialize Streamlit app
