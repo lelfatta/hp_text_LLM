@@ -82,7 +82,7 @@ def load_retriever_from_zip_and_pkl(zip_path: str, unzip_dir: str, pkl_path: str
     return loaded_retriever
 
 
-loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', embedding_function= embeddings_model)
+loaded_retriever = load_retriever_from_zip_and_pkl(zip_path= "vec_persist_directory.zip", unzip_dir='unzipped_persist', pkl_path= 'in_memory_store.pkl', _embedding_function= embeddings_model)
 
 
 def generate_response(context, prompt):
