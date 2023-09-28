@@ -1,6 +1,6 @@
 
 # streamlit_layout_app.py
-#import openai
+
 import streamlit as st
 import random
 import time
@@ -13,7 +13,7 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.storage import InMemoryStore
 import pickle 
-
+import openai
 
 #set wide as default
 st.set_page_config(layout="wide")
