@@ -18,7 +18,7 @@ import openai
 from typing import Any, Tuple, Sequence
 
 #set wide as default
-st.set_page_config(layout="wide")
+#st.set_page_config(layout="wide")
 
 # Access API key from Streamlit secrets and set key 
 api_key = st.secrets["openai_api_key"]
